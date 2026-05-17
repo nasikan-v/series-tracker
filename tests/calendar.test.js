@@ -31,8 +31,11 @@ test('show does not appear after airEndDate', () => {
   assertEqual(getShowsForDay(new Date(2024, 4, 18), [show]).length, 0);
 });
 
-test('show appears on airEndDate itself (2024-05-11, Saturday)', () => {
-  assertEqual(getShowsForDay(new Date(2024, 4, 11), [show]).length, 1);
+test('show appears on airEndDate itself (Saturday end date)', () => {
+  const showEndingSat = { ...show, airEndDate: '2024-05-11' }; // May 11 is Saturday
+  assertEqual(getShowsForDay(new Date(2024, 4, 11), [showEndingSat]).length, 1);
+  // one day after end — should NOT appear
+  assertEqual(getShowsForDay(new Date(2024, 4, 12), [showEndingSat]).length, 0);
 });
 
 test('show with empty airDays never appears', () => {

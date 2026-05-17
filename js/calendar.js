@@ -7,14 +7,19 @@ export function getShowsForDay(date, shows) {
   const d = ymd(date);
   return shows.filter(show => {
     if (!show.airStartDate || !show.airEndDate || !show.airDays?.length) return false;
-    return d >= ymd(new Date(show.airStartDate))
-        && d <= ymd(new Date(show.airEndDate))
+    return d >= parseDate(show.airStartDate)
+        && d <= parseDate(show.airEndDate)
         && show.airDays.includes(dayName);
   });
 }
 
 function ymd(date) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function parseDate(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
 }
 
 export function formatMonthTitle(year, month) {
