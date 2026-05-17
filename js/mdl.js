@@ -15,6 +15,7 @@ export function mapMdlResponse(raw) {
   if (raw.title            !== undefined) m.title         = raw.title;
   if (raw.episodes         !== undefined) m.totalEpisodes  = raw.episodes;
   if (raw.synopsis         !== undefined) m.synopsis       = raw.synopsis;
+  if (raw.description      !== undefined && m.synopsis === undefined) m.synopsis = raw.description;
   if (raw.genres           !== undefined) m.genres         = raw.genres;
   if (raw.country          !== undefined) m.country        = raw.country;
   if (raw.original_network !== undefined) m.network        = raw.original_network;
