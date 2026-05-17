@@ -14,17 +14,16 @@ test('extractSlug returns null for invalid URL', () => {
 });
 
 test('mapMdlResponse maps all expected fields', () => {
-  // Uses actual API field names from scraper.py:
-  // original_network (not network), synopsis, episodes
-  const raw = { title: 'Queen of Tears', episodes: 16, synopsis: 'A story.', genres: ['Romance'], country: 'South Korea', original_network: 'tvN', rating: 8.8 };
+  // API returns episodes/rating as strings; title may include "(year)" suffix
+  const raw = { title: 'Queen of Tears (2024)', episodes: '16', synopsis: 'A story.', genres: ['Romance'], country: 'South Korea', original_network: 'tvN', rating: '8.8' };
   const m = mapMdlResponse(raw);
-  assertEqual(m.title, 'Queen of Tears');
-  assertEqual(m.totalEpisodes, 16);
+  assertEqual(m.title, 'Queen of Tears');     // year suffix stripped
+  assertEqual(m.totalEpisodes, 16);            // parsed to number
   assertEqual(m.synopsis, 'A story.');
   assertEqual(m.genres[0], 'Romance');
   assertEqual(m.country, 'South Korea');
   assertEqual(m.network, 'tvN');
-  assertEqual(m.rating, 8.8);
+  assertEqual(m.rating, 8.8);                 // parsed to number
 });
 
 test('mapMdlResponse handles missing fields gracefully', () => {
