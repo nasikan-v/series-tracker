@@ -1,6 +1,6 @@
-import { loadShows } from './storage.js';
+import { loadShows, addShow, updateShow, deleteShow } from './storage.js';
 import { renderCalendar, formatMonthTitle } from './calendar.js';
-import { renderSidebar } from './shows.js';
+import { renderSidebar, openModal, closeModal } from './shows.js';
 
 const state = {
   year:        new Date().getFullYear(),
@@ -19,6 +19,7 @@ const els = {
   main:         document.getElementById('main'),
   filterTabs:   document.getElementById('filter-tabs'),
   showList:     document.getElementById('show-list'),
+  addShowBtn:   document.getElementById('add-show-btn'),
 };
 
 function setLoading(on) {
@@ -61,6 +62,14 @@ els.filterTabs.addEventListener('click', e => {
   if (!tab) return;
   state.filter = tab.dataset.filter;
   refresh();
+});
+
+els.addShowBtn.addEventListener('click', () => {
+  openModal(null, async (show) => {
+    setLoading(true);
+    try { await addShow(show); await refresh(); }
+    finally { setLoading(false); }
+  });
 });
 
 refresh();
