@@ -45,7 +45,7 @@ function onCardClick(show) {
   openPanel(
     show,
     async (id, patch) => { await updateShow(id, patch); await refresh(); },
-    (show) => openModal(show, async (updated) => { await updateShow(updated.id, updated); await refresh(); }),
+    (editTarget) => openModal(editTarget, async (updated) => { await updateShow(updated.id, updated); await refresh(); }),
     async (id) => { await deleteShow(id); await refresh(); }
   );
 }

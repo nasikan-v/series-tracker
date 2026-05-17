@@ -269,7 +269,11 @@ function buildPanelHtml(show) {
   const platform    = PLATFORMS[show.platform] || PLATFORMS['Other'];
   const pct         = show.totalEpisodes ? Math.round((show.watchedEpisodes / show.totalEpisodes) * 100) : 0;
   const statusClass = `status-${show.status}`;
-  const meta        = [show.country, show.network, show.airStartDate?.slice(0,4)].filter(Boolean).join(' · ');
+  const meta        = [
+    show.country && escHtml(show.country),
+    show.network && escHtml(show.network),
+    show.airStartDate?.slice(0, 4),
+  ].filter(Boolean).join(' · ');
 
   const detailsHtml = (show.synopsis || show.rating || show.genres?.length) ? `
     <div class="panel-section">
