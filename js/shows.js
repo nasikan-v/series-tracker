@@ -206,7 +206,7 @@ function wireModal(existingShow) {
     }
   });
 
-  document.getElementById('modal-save').addEventListener('click', () => {
+  document.getElementById('modal-save').addEventListener('click', async () => {
     const start = document.getElementById('field-start').value;
     const end   = document.getElementById('field-end').value;
     const errEl = document.getElementById('date-error');
@@ -240,7 +240,15 @@ function wireModal(existingShow) {
       } : {}),
     };
 
-    _onSave(show, !!existingShow);
-    closeModal();
+    const saveBtn = document.getElementById('modal-save');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving…';
+    try {
+      await _onSave(show, !!existingShow);
+      closeModal();
+    } catch {
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Show';
+    }
   });
 }
