@@ -102,7 +102,7 @@ Each platform has a colour-coded logo badge (initials on coloured background) us
 
 ### 3. Sidebar — My Shows
 - Width: 280px, collapsible via header toggle
-- Filter tabs: All · Watching · Done · Plan (single-select)
+- Filter tabs: All · Watching · Done · Plan (single-select; "Done" maps to `completed` status)
 - Show cards (compact):
   - Platform logo + title
   - Episode count (e.g. "Ep 8 / 16")
@@ -163,7 +163,7 @@ Opens as a right-side overlay when clicking a show card. Contains:
 
 ## Storage
 
-`storage.js` exposes four functions:
+`storage.js` exposes five functions:
 - `loadShows()` → array of shows from localStorage
 - `saveShows(shows)` → serialise and persist
 - `addShow(show)` → append and save
