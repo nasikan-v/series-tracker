@@ -1,4 +1,12 @@
 const MDL_API_BASE = 'https://my-drama-list-api-ten.vercel.app';
+const PROXY        = 'https://api.allorigins.win/get?url=';
+
+async function proxyFetch(url) {
+  const res = await fetch(PROXY + encodeURIComponent(url));
+  if (!res.ok) throw new Error(`Proxy error ${res.status}`);
+  const { contents } = await res.json();
+  return JSON.parse(contents);
+}
 
 export function extractSlug(mdlUrl) {
   try {
@@ -10,7 +18,7 @@ export function extractSlug(mdlUrl) {
 
 export function mapMdlResponse(raw) {
   const m = {};
-  // Strip year suffix from title if present: "Queen of Tears (2024)" → "Queen of Tears"
+  // Strip year suffix from title: "Queen of Tears (2024)" → "Queen of Tears"
   if (raw.title            !== undefined) m.title         = raw.title.replace(/\s*\(\d{4}\)\s*$/, '').trim();
   if (raw.episodes         !== undefined) m.totalEpisodes  = parseInt(raw.episodes, 10) || undefined;
   if (raw.synopsis         !== undefined) m.synopsis       = raw.synopsis;
@@ -26,21 +34,18 @@ export async function fetchMdlData(mdlUrl) {
   const slug = extractSlug(mdlUrl);
   if (!slug) throw new Error('Invalid MDL URL');
 
-  // Try the slug from the URL directly first
-  let res = await fetch(`${MDL_API_BASE}/api/id/${slug}`);
+  // Try the URL slug directly first
+  let data = await proxyFetch(`${MDL_API_BASE}/api/id/${slug}`);
 
-  // The unofficial API uses different numeric IDs than the MDL website URL.
-  // If the direct slug 404s, search by the text portion of the slug and use
-  // the first result's slug instead.
-  if (res.status === 404) {
+  // The unofficial API uses different numeric IDs than the MDL browser URL.
+  // On 404, search by the text portion of the slug and use the first result.
+  if (data.error) {
     const textPart = slug.replace(/^\d+-/, '').replace(/-/g, ' ');
-    const searchRes = await fetch(`${MDL_API_BASE}/api/search/q/${encodeURIComponent(textPart)}`);
-    if (!searchRes.ok) throw new Error("Couldn't reach MDL — fill fields manually.");
-    const { results } = await searchRes.json();
-    if (!results?.length) throw new Error('Show not found on MDL.');
-    res = await fetch(`${MDL_API_BASE}/api/id/${results[0].slug}`);
+    const search   = await proxyFetch(`${MDL_API_BASE}/api/search/q/${encodeURIComponent(textPart)}`);
+    if (!search.results?.length) throw new Error('Show not found on MDL.');
+    data = await proxyFetch(`${MDL_API_BASE}/api/id/${search.results[0].slug}`);
+    if (data.error) throw new Error('Show not found on MDL.');
   }
 
-  if (!res.ok) throw new Error(`MDL API returned ${res.status}`);
-  return mapMdlResponse(await res.json());
+  return mapMdlResponse(data);
 }
