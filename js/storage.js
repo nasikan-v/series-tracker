@@ -1,24 +1,32 @@
-import { GIST_ID, GITHUB_TOKEN } from './config.js';
-
 const FILENAME = 'series-tracker.json';
-const GIST_URL = `https://api.github.com/gists/${GIST_ID}`;
-const HEADERS  = {
-  'Authorization': `Bearer ${GITHUB_TOKEN}`,
-  'Accept':        'application/vnd.github+json',
-  'Content-Type':  'application/json',
-};
+
+function getConfig() {
+  const gistId = localStorage.getItem('st_gist_id');
+  const token  = localStorage.getItem('st_github_token');
+  if (!gistId || !token) throw new Error('NOT_CONFIGURED');
+  return {
+    url:     `https://api.github.com/gists/${gistId}`,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept':        'application/vnd.github+json',
+      'Content-Type':  'application/json',
+    },
+  };
+}
 
 export async function loadShows() {
-  const res = await fetch(GIST_URL, { headers: HEADERS });
+  const { url, headers } = getConfig();
+  const res = await fetch(url, { headers });
   if (!res.ok) throw new Error(`Gist fetch failed: ${res.status}`);
   const gist = await res.json();
   return JSON.parse(gist.files[FILENAME].content);
 }
 
 export async function saveShows(shows) {
-  const res = await fetch(GIST_URL, {
+  const { url, headers } = getConfig();
+  const res = await fetch(url, {
     method: 'PATCH',
-    headers: HEADERS,
+    headers,
     body: JSON.stringify({
       files: { [FILENAME]: { content: JSON.stringify(shows) } },
     }),

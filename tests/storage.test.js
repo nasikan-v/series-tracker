@@ -1,5 +1,9 @@
 import { test, assert, assertEqual, summary } from './harness.js';
 
+// ── Seed localStorage so getConfig() doesn't throw ──────
+localStorage.setItem('st_gist_id', 'test-gist-id');
+localStorage.setItem('st_github_token', 'test-token');
+
 // ── Mock fetch ──────────────────────────────────────────
 let _gistShows = [];
 
