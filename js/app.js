@@ -20,6 +20,7 @@ const els = {
   filterTabs:   document.getElementById('filter-tabs'),
   showList:     document.getElementById('show-list'),
   addShowBtn:   document.getElementById('add-show-btn'),
+  sidebarToggle: document.getElementById('sidebar-toggle'),
 };
 
 function setLoading(on) {
@@ -76,5 +77,14 @@ els.addShowBtn.addEventListener('click', () => {
     finally { setLoading(false); }
   });
 });
+
+els.sidebarToggle.addEventListener('click', () => {
+  state.sidebarOpen = !state.sidebarOpen;
+  els.main.classList.toggle('sidebar-open', state.sidebarOpen);
+  els.sidebarToggle.classList.toggle('active', state.sidebarOpen);
+});
+
+els.main.classList.toggle('sidebar-open', state.sidebarOpen);
+els.sidebarToggle.classList.toggle('active', state.sidebarOpen);
 
 refresh();
