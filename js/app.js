@@ -1,6 +1,6 @@
 import { loadShows, addShow, updateShow, deleteShow } from './storage.js';
 import { renderCalendar, formatMonthTitle } from './calendar.js';
-import { renderSidebar, openModal, closeModal } from './shows.js';
+import { renderSidebar, openModal, closeModal, openPanel, closePanel } from './shows.js';
 
 const state = {
   year:        new Date().getFullYear(),
@@ -42,7 +42,12 @@ async function refresh() {
 }
 
 function onCardClick(show) {
-  console.log('card clicked:', show.title); // placeholder — wired in Task 6
+  openPanel(
+    show,
+    async (id, patch) => { await updateShow(id, patch); await refresh(); },
+    (show) => openModal(show, async (updated) => { await updateShow(updated.id, updated); await refresh(); }),
+    async (id) => { await deleteShow(id); await refresh(); }
+  );
 }
 
 els.prevBtn.addEventListener('click', () => {

@@ -252,3 +252,148 @@ function wireModal(existingShow) {
     }
   });
 }
+
+// ── Expanded Panel ────────────────────────────────────────
+
+export function openPanel(show, onUpdate, onEdit, onDelete) {
+  document.getElementById('panel-box').innerHTML = buildPanelHtml(show);
+  document.getElementById('panel-overlay').classList.remove('hidden');
+  wirePanel(show, onUpdate, onEdit, onDelete);
+}
+
+export function closePanel() {
+  document.getElementById('panel-overlay').classList.add('hidden');
+}
+
+function buildPanelHtml(show) {
+  const platform    = PLATFORMS[show.platform] || PLATFORMS['Other'];
+  const pct         = show.totalEpisodes ? Math.round((show.watchedEpisodes / show.totalEpisodes) * 100) : 0;
+  const statusClass = `status-${show.status}`;
+  const meta        = [show.country, show.network, show.airStartDate?.slice(0,4)].filter(Boolean).join(' · ');
+
+  const detailsHtml = (show.synopsis || show.rating || show.genres?.length) ? `
+    <div class="panel-section">
+      <div class="section-label">Details (from MyDramaList)</div>
+      <div class="info-grid" style="margin-bottom:10px">
+        ${show.rating  ? `<div class="info-item"><label>Rating</label><span>⭐ ${show.rating}</span></div>` : ''}
+        ${show.country ? `<div class="info-item"><label>Country</label><span>${escHtml(show.country)}</span></div>` : ''}
+        ${show.network ? `<div class="info-item"><label>Network</label><span>${escHtml(show.network)}</span></div>` : ''}
+      </div>
+      ${show.genres?.length ? `<div style="margin-bottom:10px">${show.genres.map(g=>`<span class="tag">${escHtml(g)}</span>`).join('')}</div>` : ''}
+      ${show.synopsis ? `<div style="font-size:12px;color:var(--text-muted);line-height:1.6">${escHtml(show.synopsis)}</div>` : ''}
+    </div>` : '';
+
+  const mdlHtml = show.mdlUrl
+    ? `<div class="panel-section">
+        <div class="section-label">MyDramaList</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <a class="mdl-link" href="${escHtml(show.mdlUrl)}" target="_blank" rel="noopener">${escHtml(show.mdlUrl)}</a>
+          <button id="refresh-mdl-btn" class="btn-refresh">↻ Refresh</button>
+        </div>
+        <div id="mdl-panel-error" class="mdl-error hidden"></div>
+       </div>`
+    : `<div class="panel-section">
+        <div class="section-label">MyDramaList</div>
+        <div class="mdl-prompt">
+          <p>Add an MDL link to pull ratings, synopsis, and genres.</p>
+          <button id="add-mdl-btn" class="btn-refresh">+ Add MDL Link</button>
+        </div>
+       </div>`;
+
+  return `
+    <div class="panel-header">
+      <div class="poster-placeholder">🎬</div>
+      <div class="panel-meta">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <div class="platform-badge" style="background:${platform.color};color:#fff;width:18px;height:18px;font-size:9px">${platform.badge}</div>
+          <div class="panel-title">${escHtml(show.title)}</div>
+        </div>
+        <div class="panel-sub">${meta || 'No extra details yet'}</div>
+        <span class="status-badge ${statusClass}">${STATUS_LABELS[show.status] ?? show.status}</span>
+        <div class="panel-actions">
+          <button id="panel-edit-btn" class="btn-edit">Edit</button>
+          <button id="panel-delete-btn" class="btn-delete">Delete</button>
+        </div>
+      </div>
+      <button id="panel-close-btn" class="btn-close">✕</button>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-label">Progress</div>
+      <div class="ep-bar-wrap"><div class="ep-bar" id="ep-bar" style="width:${pct}%"></div></div>
+      <div class="ep-controls">
+        <button class="ep-btn" id="ep-dec">−</button>
+        <span class="ep-label" id="ep-label">Episode ${show.watchedEpisodes ?? 0} / ${show.totalEpisodes ?? '?'}</span>
+        <button class="ep-btn" id="ep-inc">+</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-label">Air Schedule</div>
+      <div class="info-grid">
+        <div class="info-item"><label>Airs on</label><span>${show.airDays?.join(' · ') || '—'}</span></div>
+        <div class="info-item"><label>Platform</label><span>${show.platform || '—'}</span></div>
+        <div class="info-item"><label>Start date</label><span>${show.airStartDate || '—'}</span></div>
+        <div class="info-item"><label>End date</label><span>${show.airEndDate || '—'}</span></div>
+      </div>
+    </div>
+
+    ${detailsHtml}
+    ${mdlHtml}
+  `;
+}
+
+function wirePanel(show, onUpdate, onEdit, onDelete) {
+  const watched = { current: show.watchedEpisodes ?? 0 };
+
+  document.getElementById('panel-close-btn').addEventListener('click', closePanel);
+  document.getElementById('panel-overlay').addEventListener('click', e => {
+    if (e.target.id === 'panel-overlay') closePanel();
+  });
+
+  document.getElementById('panel-edit-btn').addEventListener('click', () => {
+    closePanel();
+    onEdit(show);
+  });
+
+  document.getElementById('panel-delete-btn').addEventListener('click', () => {
+    if (confirm(`Delete "${show.title}"?`)) { onDelete(show.id); closePanel(); }
+  });
+
+  function updateEp() {
+    document.getElementById('ep-label').textContent = `Episode ${watched.current} / ${show.totalEpisodes ?? '?'}`;
+    const pct = show.totalEpisodes ? Math.round((watched.current / show.totalEpisodes) * 100) : 0;
+    document.getElementById('ep-bar').style.width = pct + '%';
+    onUpdate(show.id, { watchedEpisodes: watched.current });
+  }
+
+  document.getElementById('ep-inc').addEventListener('click', () => {
+    if (!show.totalEpisodes || watched.current < show.totalEpisodes) { watched.current++; updateEp(); }
+  });
+  document.getElementById('ep-dec').addEventListener('click', () => {
+    if (watched.current > 0) { watched.current--; updateEp(); }
+  });
+
+  const refreshBtn = document.getElementById('refresh-mdl-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', async () => {
+      const errEl = document.getElementById('mdl-panel-error');
+      errEl.classList.add('hidden');
+      refreshBtn.disabled = true; refreshBtn.textContent = '↻ Refreshing…';
+      try {
+        const { fetchMdlData } = await import('./mdl.js');
+        const data = await fetchMdlData(show.mdlUrl);
+        await onUpdate(show.id, data);
+        closePanel();
+      } catch {
+        errEl.textContent = "Couldn't reach MDL — try again later.";
+        errEl.classList.remove('hidden');
+      } finally {
+        refreshBtn.disabled = false; refreshBtn.textContent = '↻ Refresh';
+      }
+    });
+  }
+
+  const addMdlBtn = document.getElementById('add-mdl-btn');
+  if (addMdlBtn) addMdlBtn.addEventListener('click', () => { closePanel(); onEdit(show); });
+}
